@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+
+# Built import strings are published as release assets.
+/*.sb
