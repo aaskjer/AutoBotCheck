@@ -1,83 +1,67 @@
-# AutoBotCheck
+<h1 align="center">AutoBotCheck</h1>
 
-Three separate [Streamer.bot](https://streamer.bot) actions that go through public bot lists and ban every listed bot that is not already banned in your Twitch channel.
+<p align="center">
+  <b>Bans the bots from public bot lists in your Twitch channel.</b><br>
+  Three lists, three actions, and every later run only bans what is new.
+</p>
 
-| Action | Bot list |
-| --- | --- |
-| `TwitchInsight` | [TwitchInsights](https://twitchinsights.net/bots) |
-| `TwitchBots.Info` | [TwitchBots.info](https://twitchbots.info) (multi-channel bots) |
-| `ISDS.BanLists` | [ISDS Twitch ban lists](https://github.com/isdsdataarchive/twitch_ban_lists) |
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-Twitch-9146FF" alt="Platform">
+  <img src="https://img.shields.io/badge/tool-streamer.bot-0b73ff" alt="Streamer.bot">
+  <img src="https://img.shields.io/github/license/aaskjer/AutoBotCheck" alt="License">
+  <img src="https://img.shields.io/github/v/release/aaskjer/AutoBotCheck" alt="Release">
+  <img src="https://img.shields.io/github/downloads/aaskjer/AutoBotCheck/total" alt="Downloads">
+</p>
 
-All three actions run the same C# code ([src/AutoBotCheck.cs](src/AutoBotCheck.cs)); the `botSource` argument picks the list.
+<p align="center">
+  <a href="https://github.com/aaskjer/AutoBotCheck/releases/latest"><b>Download</b></a> &nbsp;·&nbsp;
+  <a href="Setup-Guide.md"><b>Setup Guide</b></a> &nbsp;·&nbsp;
+  <a href="Import-String.md"><b>Import String</b></a> &nbsp;·&nbsp;
+  <a href="CHANGELOG.md"><b>Changelog</b></a>
+</p>
 
-## Installation
+---
 
-1. Download `AutoBotCheck_v1.1.sb` from the [latest release](https://github.com/aaskjer/AutoBotCheck/releases/latest).
-2. In Streamer.bot click **Import**, drop the file into the import field (or paste its content) and import.
-3. Create two groups under **Settings > Groups**: `Bots` and `WhitelistedBots` (other names work too, see [Arguments](#arguments)).
-4. Optional: set `dryRun` to `True` for the first run to see what would be banned.
+## 📖 Overview
 
-The groups `TwitchInsightBots`, `TwitchBotsInfo` and `ISDSBanLists` are created and filled automatically.
+AutoBotCheck is a set of three Streamer.bot actions. Each one downloads a public bot list (TwitchInsights,
+TwitchBots.info or the ISDS ban lists), keeps a Streamer.bot group in sync with it and bans every listed
+account that is not banned in your channel yet. The bots in your own bot group are banned along with them,
+the accounts in your whitelist never.
 
-### Upgrading from 1.0
-
-`TwitchInsight` and `TwitchBots.Info` keep their action IDs, so importing 1.1 replaces the 1.0 actions. `ISDS.BanLists` is added as a new action. If you changed the group names in 1.0, set them again after the import.
-
-## Usage
-
-- The first **Test** trigger of an action starts a check.
-- The second **Test** trigger (argument `command = killprocess`) stops a running check at the next checkpoint. This only works while the action stays in a non-blocking queue (the import uses `Backend - Bot`).
-- The first run can take a while: Twitch allows about 800 API calls per minute. Later runs only ban accounts that are not banned yet.
-- Running a check while you are live is not recommended.
-- With Streamer.bot on debug log level a run can write a very large log file.
-
-Every run ends with a summary in the Streamer.bot log (new bans, already banned, unbans, protected accounts).
-
-## Arguments
-
-| Argument | Default | Description |
-| --- | --- | --- |
-| `botGroupName` | `Bots` | Your own extra bots. They are banned even if they are on a safelist. Accounts that no longer exist are removed from the group. |
-| `whitelistGroupName` | `WhitelistedBots` | Never banned. Unbanned again if they are on the bot list or in the bot group, or if AutoBotCheck banned them. |
-| `botSource` | set per action | `twitchinsights`, `twitchbotsinfo` or `isds` |
-| `isdsLists` | `follower_bot_list,viewer_bot_list,spam_bot_list,seller_advertising_list` | `ISDS.BanLists` only. Comma separated; also available: `porn_bot_acc_list`, `hate_troll_list` (all three parts), `mad_tos_list`, `security_ban_list` |
-| `dryRun` | `False` | `True` only logs what would be banned or unbanned. Groups and the non-existent cache are still updated. |
-
-## Protected accounts
-
-- **Never banned:** the broadcaster, the Streamer.bot bot account, mods, VIPs and the whitelist group.
-- **Skipped unless they are in your bot group:** well-known service bots (Nightbot, StreamElements, Streamlabs, Moobot, Fossabot, ...), bots that TwitchBots.info marks as hosted services, and the ISDS whitelisted, greylisted and unban lists.
-- **Unbanned automatically:** protected service bots and your own accounts, but only if AutoBotCheck banned them (ban reason starts with `Suspected Harmful Bot` or `AutoBotCheck`). Bans with any other reason are never lifted.
-
-## Fast mode (broadcaster token)
-
-AutoBotCheck uses Streamer.bot's Twitch token for direct Helix API calls:
-
-| Token | Lookups | Ban list / bans |
-| --- | --- | --- |
-| Broadcaster token | 100 accounts per request | Existing bans are read, so only new bots are banned |
-| Token of another account | 100 accounts per request | Bans go through Streamer.bot and every run re-bans all bots |
-| No token available | One call per account | Same as above |
-
-The log warns when it falls back to a slower mode.
-
-## Files and caching
-
-- `<Streamer.bot folder>/AutoBotCheck/NonExistentBot.txt` stores accounts that no longer exist on Twitch so they are not looked up again.
-- Downloaded bot lists are reused for one hour.
-
-## Building the import file
-
-`AutoBotCheck_v1.1.sb` is generated from the 1.0 export and the C# source:
-
-```bash
-python -I src/build_sb.py src/AutoBotCheck_v1.0.sb AutoBotCheck_v1.1.sb
+```
+SUMMARY (twitchinsights):
+  TwitchInsightBots: 14248 members (+236 / -12)
+  Bots: 3 members (-0)
+  Bans: 230 new, 13980 already banned, 0 failed
+  Unbans: 0 done, 0 failed | Protected: 41
 ```
 
-## Bot lists
+## ✨ Highlights
 
-AutoBotCheck only downloads the public lists; it does not maintain them. If an account is listed by mistake, contact the list maintainer. ISDS unban requests go to unban@isds.tech.
+- 📋 **Three bot lists.** TwitchInsights, TwitchBots.info and the ISDS ban lists, each in an action of its
+  own. You pick which of the ISDS lists are used.
+- ⚡ **Only what is new.** With the broadcaster token, AutoBotCheck reads your ban list once and bans only
+  the accounts that are not banned yet. Accounts are looked up 100 at a time.
+- 🛡️ **Your people stay.** The broadcaster, your bot account, mods, VIPs and the whitelist group are
+  never banned.
+- 🤖 **Service bots are left alone.** Nightbot, StreamElements, Streamlabs and other hosted bots are
+  skipped, unless you put them in your own bot group.
+- ↩️ **Mistakes undone.** A protected account that AutoBotCheck banned is unbanned on the next run. Bans
+  you made yourself are never touched.
+- 🧪 **Dry run.** With `dryRun` set to `True` the log shows what would be banned, and nobody is.
+- ⏹️ **Stops when you say so.** The second `Test` trigger stops a running check at the next checkpoint.
 
-## License
+---
 
-[MIT](LICENSE)
+## Credits
+
+- **Author:** [aaskjer on Twitch](https://twitch.tv/aaskjer) · [aaskjer.github.io](https://aaskjer.github.io/)
+- **Built for:** [Streamer.bot](https://streamer.bot) by [nate1280](https://www.patreon.com/c/nate1280/home)
+- **Data & services:**
+  - [TwitchInsights](https://twitchinsights.net/bots): bot list
+  - [TwitchBots.info](https://twitchbots.info): bot list and hosted service bots
+  - [ISDS Twitch ban lists](https://github.com/isdsdataarchive/twitch_ban_lists): ban lists, white, grey and unban lists
+- **Thanks:** YOU ♡
+
+None of the projects above is affiliated with or endorses AutoBotCheck.
